@@ -23,6 +23,8 @@ type BitcaskStore struct {
 	last_updated timestamp.Timestamp
 }
 
+type KeyOffsets map[string]uint
+
 var store BitcaskStore = BitcaskStore{
 	handler: "dmnjkshoqwhorfhn2417801237@0y2941hqhw-$@480&(@)&$)HY*!(?)",
 }
@@ -39,15 +41,20 @@ func (s *BitcaskStore) openWopts(dir_name string, opts map[string]interface{}) B
 }
 func (s *BitcaskStore) get(key string) any {
 	store.mu.Lock()
-	for _, d := range s.data {
-		if d.key == key {
-			store.mu.Unlock()
-			return &d
-		}
-	}
+
+	store.mu.Unlock()
 	return nil
 }
 func (s *BitcaskStore) put(handler BitcaskHandle, key string, value any) {
+	store.mu.Lock()
+	s.data = append(s.data, DataStructure{
+		key:    key,
+		value:  value,
+		tstamp: *timestamppb.Now(),
+	})
+	store.mu.Unlock()
+}
+func (s *BitcaskStore) delete(handler BitcaskHandle, key string, value any) {
 	store.mu.Lock()
 	s.data = append(s.data, DataStructure{
 		key:    key,
