@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -31,10 +35,20 @@ var store BitcaskStore = BitcaskStore{
 }
 
 func main() {
+	store.open("user_db")
+}
 
+func rootDir() string {
+	_, b, _, _ := runtime.Caller(0)
+	return path.Dir(b)
 }
 
 func (s *BitcaskStore) open(dir_name string) BitcaskHandle {
+	root_dir := rootDir()
+	full_path := root_dir + "/" + dir_name
+	_createDir(full_path)
+	os.Create(filepath.Join(filepath.Base(full_path), "bitcask.data"))
+	os.Create(filepath.Join(filepath.Base(full_path), "bitcask.metadata"))
 	return &store.handler
 }
 func (s *BitcaskStore) openWopts(dir_name string, opts map[string]interface{}) BitcaskHandle {
@@ -66,4 +80,10 @@ func (s *BitcaskStore) delete(handler BitcaskHandle, key string, value any) {
 	})
 	delete(indexes, key)
 	store.mu.Unlock()
+}
+
+func _createDir(name string) {
+	root_dir := rootDir()
+	full_path := root_dir + "/" + name
+	os.MkdirAll(full_path, os.ModePerm)
 }
