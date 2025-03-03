@@ -6,7 +6,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"sync"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -25,19 +24,14 @@ type DataStructure struct {
 	deleted bool
 }
 
-type BitcaskStore struct {
-	mu    sync.Mutex
-	files []BitcaskHandle
-}
-
-var indexes = make(map[string]int)
-
-var store BitcaskStore = BitcaskStore{
-	handler: "dmnjkshoqwhorfhn2417801237@0y2941hqhw-$@480&(@)&$)HY*!(?)",
-}
+// type BitcaskStore struct {
+// 	Mu    sync.Mutex
+// 	DataFile BitcaskHandle
+// 	MetadataFile BitcaskHandle
+// }
 
 func main() {
-	handler := store.open("user_db")
+	handler := open("user_db")
 }
 
 func rootDir() string {
@@ -45,9 +39,9 @@ func rootDir() string {
 	return path.Dir(b)
 }
 
-func (s *BitcaskStore) open(dir_name string) BitcaskHandle {
+func open(dir_name string) BitcaskHandle {
 	_createDir(filepath.Base(dir_name))
-	_, err := os.Create(filepath.Join(filepath.Base(dir_name), "bitcask.data"))
+	data_file, err := os.Create(filepath.Join(filepath.Base(dir_name), "bitcask.data"))
 	if err != nil {
 		fmt.Printf("Data file failed to create: %s", err.Error())
 	}
@@ -55,7 +49,11 @@ func (s *BitcaskStore) open(dir_name string) BitcaskHandle {
 	if err != nil {
 		fmt.Printf("Metadata file failed to create: %s", err.Error())
 	}
-	return &dir_name
+	return &BitcaskHandle{
+		File: data_file,
+		Path: dir_name,
+		Index: ,
+	}
 }
 func (s *BitcaskStore) openWopts(dir_name string, opts map[string]interface{}) BitcaskHandle {
 	return nil
